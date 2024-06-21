@@ -40,11 +40,6 @@ class Square:
 		#print(position)
 		this.box = pygame.Rect(pos[0], pos[1], square_size, square_size)
 
-	def move(this, position):
-		this.position = position
-		pos = coordinates(position)
-		this.box.left = pos[0]
-		this.box.top = pos[1]
 
 	def grow(this):
 		this.value *= 2
@@ -57,6 +52,9 @@ class Square:
 		display.blit(text[this.value], text_rect)
 
 	def __str__(this):
+		return f"Square({this.position}, {this.value})"
+	
+	def __repr__(this):
 		return f"Square({this.position}, {this.value})"
 
 class Empty(Square):
@@ -73,10 +71,15 @@ class Empty(Square):
 	def __str__(this):
 		return f"Empty({this.position})"	
 	
+	def __repr__(this):
+		return f"Empty({this.position})"	
+	
 class Grid:
 	def __init__(this):
 		this.grid = [[Empty((i, j)) for j in range(4)] for i in range(4)]
 		this.freeSquares = [(i, j) for i in range(4) for j in range(4)]
+		this.movingSquares = []
+		this.willFuse = []
 		this.score = 0
 		this.score_box = base_font.render('Score: 0', False, (0, 0, 0))
 		#print(this.grid, this.freeSquares)
@@ -110,9 +113,10 @@ class Grid:
 					if (last_taken + 1, col) in this.freeSquares:
 						this.freeSquares.remove((last_taken + 1, col))
 					temp = this.grid[row][col]
-					temp.move((last_taken + 1, col))
 					this.grid[row][col] = Empty((row, col))
 					this.grid[last_taken + 1][col] = temp
+					temp.position = (last_taken + 1, col)
+					this.movingSquares.append({'square':temp, 'target': coordinates((last_taken + 1, col))})
 					last_taken += 1
 					if last_taken != row:
 						has_moved = True
@@ -121,12 +125,14 @@ class Grid:
 					this.score += this.grid[last_taken][col].grow()
 					last_grown = last_taken
 					this.score_box = base_font.render(f'Score: {this.score}', False, (0, 0, 0))
-					this.grid[row][col] = Empty((row, col))
+					this.willFuse.append(this.grid[row][col])
+					this.movingSquares.append({'square':this.grid[row][col], 'target': coordinates((last_taken, col))})
 					has_moved = True
 		#print(this.freeSquares)
+		this.dx = 0
+		this.dy = -15
 		if has_moved:
-			if has_moved:
-				this.createSquare()
+			this.createSquare()
 		#print(this.freeSquares)
 					
 	def move_right(this):
@@ -145,9 +151,10 @@ class Grid:
 					if (row, last_taken - 1) in this.freeSquares:
 						this.freeSquares.remove((row, last_taken - 1))
 					temp = this.grid[row][col]
-					temp.move((row, last_taken - 1))
 					this.grid[row][col] = Empty((row, col))
 					this.grid[row][last_taken - 1] = temp
+					temp.position = (row, last_taken - 1)
+					this.movingSquares.append({'square':temp, 'target': coordinates((row, last_taken - 1))})
 					last_taken -= 1
 					if last_taken != col:
 						has_moved = True
@@ -156,9 +163,12 @@ class Grid:
 					this.score += this.grid[row][last_taken].grow()
 					last_grown = last_taken
 					this.score_box = base_font.render(f'Score: {this.score}', False, (0, 0, 0))
-					this.grid[row][col] = Empty((row, col))
+					this.willFuse.append(this.grid[row][col])
+					this.movingSquares.append({'square':this.grid[row][col], 'target': coordinates((row, last_taken))})
 					has_moved = True
 		#print(this.freeSquares)
+		this.dx = 15
+		this.dy = 0
 		if has_moved:
 			this.createSquare()
 		#print(this.freeSquares)
@@ -179,9 +189,10 @@ class Grid:
 					if (last_taken - 1, col) in this.freeSquares:
 						this.freeSquares.remove((last_taken - 1, col))
 					temp = this.grid[row][col]
-					temp.move((last_taken - 1, col))
 					this.grid[row][col] = Empty((row, col))
 					this.grid[last_taken - 1][col] = temp
+					temp.position = (last_taken - 1, col)
+					this.movingSquares.append({'square':temp, 'target': coordinates((last_taken - 1, col))})
 					last_taken -= 1
 					if last_taken != row:
 						has_moved = True
@@ -190,9 +201,12 @@ class Grid:
 					this.score += this.grid[last_taken][col].grow()
 					last_grown = last_taken
 					this.score_box = base_font.render(f'Score: {this.score}', False, (0, 0, 0))
-					this.grid[row][col] = Empty((row, col))
+					this.willFuse.append(this.grid[row][col])
+					this.movingSquares.append({'square':this.grid[row][col], 'target': coordinates((last_taken, col))})
 					has_moved = True
 		#print(this.freeSquares)
+		this.dx = 0
+		this.dy = 15
 		if has_moved:
 			this.createSquare()
 		#print(this.freeSquares)
@@ -213,9 +227,10 @@ class Grid:
 					if (row, last_taken + 1) in this.freeSquares:
 						this.freeSquares.remove((row, last_taken + 1))
 					temp = this.grid[row][col]
-					temp.move((row, last_taken + 1))
 					this.grid[row][col] = Empty((row, col))
 					this.grid[row][last_taken + 1] = temp
+					temp.position = (row, last_taken + 1)
+					this.movingSquares.append({'square':temp, 'target': coordinates((row, last_taken + 1))})
 					last_taken += 1
 					if last_taken != col:
 						has_moved = True
@@ -224,19 +239,47 @@ class Grid:
 					this.score += this.grid[row][last_taken].grow()
 					last_grown = last_taken
 					this.score_box = base_font.render(f'Score: {this.score}', False, (0, 0, 0))
-					this.grid[row][col] = Empty((row, col))
+					this.willFuse.append(this.grid[row][col])
+					this.movingSquares.append({'square':this.grid[row][col], 'target': coordinates((row, last_taken))})
 					has_moved = True
 		#print(this.freeSquares)
+		this.dx = -15
+		this.dy = 0
 		if has_moved:
 			this.createSquare()
 		#print(this.freeSquares)
+	
+	def update(this):
+		delList = []
+		delSqList = []
+		for sq in this.movingSquares:
+			#print(sq['square'].box.left, sq['square'].box.top)
+			if (sq['square'].box.left != sq['target'][0] or
+				sq['square'].box.top != sq['target'][1]):
+				sq['square'].box.left += this.dx
+				sq['square'].box.top += this.dy
+			else:
+				delList.append(sq) 
+				delSqList.append(sq['square']) 
+			#print(sq['square'].box.left, sq['square'].box.top)
+		for sq in this.willFuse:
+			if sq in delSqList:
+				if sq.position in this.freeSquares:
+					this.grid[sq.position[0]][sq.position[1]] = Empty(sq.position)
+		this.movingSquares = list(filter(lambda sq: sq not in delList, this.movingSquares))
+		this.willFuse = list(filter(lambda sq: sq not in delSqList, this.willFuse))
 
 	def show(this):
 		display.fill(bg_color)
 		display.blit(this.score_box, (25, 50))
 		for row in this.grid:
 			for sq in row:
-				sq.show()
+				if isinstance(sq, Empty):
+					sq.show()
+		for row in this.grid:
+			for sq in row:
+				if not isinstance(sq, Empty):
+					sq.show()
 
 	
 
@@ -280,9 +323,9 @@ if __name__ == '__main__':
 				left_pressed = False
 				grid.move_left()
 
-
+		grid.update()
 		grid.show()
 
 		pygame.display.flip()
-		clock.tick(60)
+		clock.tick(120)
 
