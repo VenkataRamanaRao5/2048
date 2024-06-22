@@ -1,6 +1,7 @@
 import pygame
 from sys import exit
-from random import choice, random, randrange
+from random import choice, random
+from math import atan
 
 pygame.init()
 
@@ -85,6 +86,7 @@ class Grid:
 		#print(this.grid, this.freeSquares)
 		this.createSquare()
 		this.createSquare()
+		this.show()
 		#print(this.grid, this.freeSquares)
 
 	def createSquare(this):
@@ -268,7 +270,19 @@ class Grid:
 					this.grid[sq.position[0]][sq.position[1]] = Empty(sq.position)
 		this.movingSquares = list(filter(lambda sq: sq not in delList, this.movingSquares))
 		this.willFuse = list(filter(lambda sq: sq not in delSqList, this.willFuse))
-
+	
+	def isGameOver(this):
+		if this.freeSquares:
+			return False
+		for i in range(1,3):
+			for j in range(4):
+				if 	(this.grid[i][j].value == this.grid[i-1][j].value
+					or this.grid[i][j].value == this.grid[i+1][j].value
+					or this.grid[j][i].value == this.grid[j][i-1].value
+					or this.grid[j][i].value == this.grid[j][i+1].value):
+					return False
+		return True
+					
 	def show(this):
 		display.fill(bg_color)
 		display.blit(this.score_box, (25, 50))
@@ -294,38 +308,66 @@ if __name__ == '__main__':
 
 	grid = Grid()
 	up_pressed, down_pressed, right_pressed, left_pressed = False, False, False, False
+	x, y = 0, 0
 
 	while True:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				exit()
-        		if event.type == pygame.KEYDOWN:
-        			if event.key == pygame.K_UP:
-        				up_pressed = True
-        			elif event.key == pygame.K_RIGHT:
-        				right_pressed = True
-        			elif event.key == pygame.K_DOWN:
-        				down_pressed = True
-        			elif event.key == pygame.K_LEFT:
-        				left_pressed = True
-        		if event.type == pygame.KEYUP:
-        			if up_pressed and event.key == pygame.K_UP:
-        				up_pressed = False
-        				grid.move_up()
-        			elif right_pressed and event.key == pygame.K_RIGHT:
-        				right_pressed = False
-        				grid.move_right()
-        			elif down_pressed and event.key == pygame.K_DOWN:
-        				down_pressed = False
-        				grid.move_down()
-        			elif left_pressed and event.key == pygame.K_LEFT:
-        				left_pressed = False
-        				grid.move_left()
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				if event.touch:
+					x, y = event.pos
+			if event.type == pygame.MOUSEBUTTONUP:
+				if event.touch:
+					x -= event.pos[0]
+					y -= event.pos[1]
+					if y >= x:
+						if y >= -x:
+							grid.move_up()
+						else:
+							grid.move_right()
+					else:
+						if y >= -x:
+							grid.move_left()
+						else:
+							grid.move_down()
 
-		grid.update()
-		grid.show()
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_UP:
+					up_pressed = True
+				elif event.key == pygame.K_RIGHT:
+					right_pressed = True
+				elif event.key == pygame.K_DOWN:
+					down_pressed = True
+				elif event.key == pygame.K_LEFT:
+					left_pressed = True
+			if event.type == pygame.KEYUP:
+				if up_pressed and event.key == pygame.K_UP:
+					up_pressed = False
+					grid.move_up()
+				elif right_pressed and event.key == pygame.K_RIGHT:
+					right_pressed = False
+					grid.move_right()
+				elif down_pressed and event.key == pygame.K_DOWN:
+					down_pressed = False
+					grid.move_down()
+				elif left_pressed and event.key == pygame.K_LEFT:
+					left_pressed = False
+					grid.move_left()
+
+		if grid.movingSquares or grid.willFuse:
+			grid.update()
+			grid.show()
+		
+		elif grid.isGameOver():
+			if input("Game over! Enter y for new game") in ('y', 'Y'):
+				grid = Grid()
+			else:
+				pygame.quit()
+				exit()
 
 		pygame.display.flip()
 		clock.tick(120)
 
+print("Boo hoo")
