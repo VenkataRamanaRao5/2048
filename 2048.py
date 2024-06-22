@@ -300,28 +300,28 @@ if __name__ == '__main__':
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				exit()
-		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_UP:
-				up_pressed = True
-			elif event.key == pygame.K_RIGHT:
-				right_pressed = True
-			elif event.key == pygame.K_DOWN:
-				down_pressed = True
-			elif event.key == pygame.K_LEFT:
-				left_pressed = True
-		if event.type == pygame.KEYUP:
-			if up_pressed and event.key == pygame.K_UP:
-				up_pressed = False
-				grid.move_up()
-			elif right_pressed and event.key == pygame.K_RIGHT:
-				right_pressed = False
-				grid.move_right()
-			elif down_pressed and event.key == pygame.K_DOWN:
-				down_pressed = False
-				grid.move_down()
-			elif left_pressed and event.key == pygame.K_LEFT:
-				left_pressed = False
-				grid.move_left()
+        		if event.type == pygame.KEYDOWN:
+        			if event.key == pygame.K_UP:
+        				up_pressed = True
+        			elif event.key == pygame.K_RIGHT:
+        				right_pressed = True
+        			elif event.key == pygame.K_DOWN:
+        				down_pressed = True
+        			elif event.key == pygame.K_LEFT:
+        				left_pressed = True
+        		if event.type == pygame.KEYUP:
+        			if up_pressed and event.key == pygame.K_UP:
+        				up_pressed = False
+        				grid.move_up()
+        			elif right_pressed and event.key == pygame.K_RIGHT:
+        				right_pressed = False
+        				grid.move_right()
+        			elif down_pressed and event.key == pygame.K_DOWN:
+        				down_pressed = False
+        				grid.move_down()
+        			elif left_pressed and event.key == pygame.K_LEFT:
+        				left_pressed = False
+        				grid.move_left()
 
 		grid.update()
 		grid.show()
